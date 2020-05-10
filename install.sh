@@ -1,6 +1,7 @@
 #!/bin/sh
 
-sudo cargo install --root /usr/local/bin/
+cargo build --release
+sudo cp -uv target/release/network-stalker /usr/local/bin/
 
 # copy stuff
 sudo cp -uv *.service /etc/systemd/system
