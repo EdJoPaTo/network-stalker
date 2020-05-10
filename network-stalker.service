@@ -1,5 +1,5 @@
 [Unit]
-Description=Run ETOs home schedule
+Description=Run network-stalker
 Wants=network-online.target
 After=network-online.target
 
