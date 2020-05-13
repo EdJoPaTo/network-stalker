@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cargo build --release
+nice cargo build --release
 sudo cp -uv target/release/network-stalker /usr/local/bin/
 
 # copy stuff
