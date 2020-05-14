@@ -4,25 +4,17 @@ use std::collections::HashMap;
 use std::thread;
 use std::time;
 
+mod cli;
 mod mqtt;
 mod nmap;
-
-#[cfg(debug_assertions)]
-const RETAIN: bool = false;
-#[cfg(not(debug_assertions))]
-const RETAIN: bool = true;
 
 const LAST_ONLINE_MINUTES: [i64; 4] = [1, 3, 5, 15];
 
 fn main() {
-    // TODO: get from command line arguments
-    let mqtt_server = "tcp://etoPiServer:1883";
-    let mqtt_base_topic = "network-stalker";
-
-    let to_be_checked = ["etoNUC", "etoWindoof", "etoPhone", "etoPad"];
+    let args = cli::arguments();
 
     let mut mqtt_cached_publisher = mqtt::MqttCachedPublisher::new(
-        mqtt::connect(mqtt_server, mqtt_base_topic, RETAIN)
+        mqtt::connect(&args.mqtt_server, &args.mqtt_base_topic, args.mqtt_retain)
             .expect("failed to connect to MQTT server"),
     );
 
@@ -30,10 +22,11 @@ fn main() {
 
     let starttime = Utc::now().timestamp();
     loop {
-        for &hostname in to_be_checked.iter() {
+        for hostname in args.hostnames.iter() {
             check_host(
                 &mut mqtt_cached_publisher,
-                &mqtt_base_topic,
+                &args.mqtt_base_topic,
+                args.mqtt_retain,
                 &mut last_seen_online,
                 starttime,
                 &hostname,
@@ -42,7 +35,11 @@ fn main() {
 
         // Loop worked out fine -> everything is fine -> 2
         mqtt_cached_publisher
-            .publish(&format!("{}/connected", mqtt_base_topic), "2", RETAIN)
+            .publish(
+                &format!("{}/connected", &args.mqtt_base_topic),
+                "2",
+                args.mqtt_retain,
+            )
             .expect("failed to update connected status");
 
         thread::sleep(time::Duration::from_secs(30));
@@ -52,6 +49,7 @@ fn main() {
 fn check_host(
     mqtt_client: &mut mqtt::MqttCachedPublisher,
     mqtt_topic_base: &str,
+    mqtt_retain: bool,
     last_seen_online: &mut HashMap<String, i64>,
     starttime: i64,
     hostname: &str,
@@ -59,7 +57,13 @@ fn check_host(
     let host_topic = format!("{}/hosts/{}", mqtt_topic_base, hostname);
 
     let reachable = nmap::is_reachable(hostname);
-    publish_reachable(mqtt_client, &host_topic, "now", Some(reachable));
+    publish_reachable(
+        mqtt_client,
+        &host_topic,
+        "now",
+        mqtt_retain,
+        Some(reachable),
+    );
 
     let now = Utc::now();
     let unix = now.timestamp();
@@ -77,6 +81,7 @@ fn check_host(
         publish_seen_within(
             mqtt_client,
             &host_topic,
+            mqtt_retain,
             last_online,
             starttime,
             *minutes,
@@ -88,6 +93,7 @@ fn check_host(
 fn publish_seen_within(
     mqtt_client: &mut mqtt::MqttCachedPublisher,
     topic_base: &str,
+    retain: bool,
     last_online: Option<&i64>,
     starttime: i64,
     within_minutes: i64,
@@ -109,6 +115,7 @@ fn publish_seen_within(
         mqtt_client,
         topic_base,
         &topic_suffix,
+        retain,
         online_within_timespan,
     )
 }
@@ -117,6 +124,7 @@ fn publish_reachable(
     mqtt_client: &mut mqtt::MqttCachedPublisher,
     topic_base: &str,
     topic_suffix: &str,
+    retain: bool,
     reachable: Option<bool>,
 ) {
     let topic = format!("{}/{}", topic_base, topic_suffix);
@@ -127,6 +135,6 @@ fn publish_reachable(
     };
 
     mqtt_client
-        .publish(&topic, payload, RETAIN)
+        .publish(&topic, payload, retain)
         .expect("publish host check to mqtt failed");
 }
