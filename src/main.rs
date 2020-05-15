@@ -87,50 +87,27 @@ fn check_host(
 
     let last_online = last_seen_online.get(hostname);
 
-    for minutes in LAST_ONLINE_MINUTES.iter() {
-        publish_seen_within(
+    for within_minutes in LAST_ONLINE_MINUTES.iter() {
+        let topic_suffix = format!("{}min", within_minutes);
+        let min_timestamp = unix - (within_minutes * 60);
+
+        let online_within_timespan = if last_online.is_some() {
+            last_online.map(|last| *last > min_timestamp)
+        } else if starttime < min_timestamp {
+            Some(false)
+        } else {
+            None
+        };
+
+        publish_reachable(
             mqtt_client,
             &host_topic,
+            &topic_suffix,
             mqtt_qos,
             mqtt_retain,
-            last_online,
-            starttime,
-            *minutes,
-            unix,
-        );
+            online_within_timespan,
+        )
     }
-}
-
-fn publish_seen_within(
-    mqtt_client: &mut mqtt::MqttCachedPublisher,
-    topic_base: &str,
-    qos: i32,
-    retain: bool,
-    last_online: Option<&i64>,
-    starttime: i64,
-    within_minutes: i64,
-    unix_timestamp_now: i64,
-) {
-    let topic_suffix = format!("{}min", within_minutes);
-
-    let min_timestamp = unix_timestamp_now - (within_minutes * 60);
-
-    let online_within_timespan = if last_online.is_some() {
-        last_online.map(|last| *last > min_timestamp)
-    } else if starttime < min_timestamp {
-        Some(false)
-    } else {
-        None
-    };
-
-    publish_reachable(
-        mqtt_client,
-        topic_base,
-        &topic_suffix,
-        qos,
-        retain,
-        online_within_timespan,
-    )
 }
 
 fn publish_reachable(
