@@ -3,7 +3,9 @@ use clap::{App, Arg};
 pub struct RuntimeArguments {
     pub mqtt_server: String,
     pub mqtt_base_topic: String,
+    pub mqtt_qos: i32,
     pub mqtt_retain: bool,
+    pub mqtt_file_persistence: bool,
     pub hostnames: Vec<String>,
 }
 
@@ -28,10 +30,23 @@ pub fn build_cli() -> App<'static, 'static> {
             .help("MQTT Root Topic to publish")
             .default_value("network-stalker")
         )
+        .arg(Arg::with_name("MQTT QoS")
+            .short("q")
+            .long("qos")
+            .value_name("INT")
+            .takes_value(true)
+            .help("Define the Quality of Service for the MQTT Messages (0, 1 or 2)")
+            .default_value("2")
+        )
         .arg(Arg::with_name("MQTT Retain")
             .short("r")
             .long("retain")
-            .help("publish MQTT Messages with the retain flag")
+            .help("Publish MQTT Messages with the retain flag")
+        )
+        .arg(Arg::with_name("MQTT File persistence")
+            .short("p")
+            .long("file-persistence")
+            .help("When enabled the MQTT persistence is done via files within the working directory. Enabling this is more reliable.")
         )
         .arg(Arg::with_name("hostnames")
             .multiple(true)
@@ -54,7 +69,14 @@ pub fn arguments() -> RuntimeArguments {
         .expect("MQTT Base Topic could not be read from command line")
         .to_owned();
 
+    let mqtt_qos: i32 = matches
+        .value_of("MQTT QoS")
+        .and_then(|s| s.parse::<i32>().ok())
+        .expect("MQTT QoS could not be read from command line. Make sure its 0, 1 or 2");
+
     let mqtt_retain = matches.is_present("MQTT Retain");
+
+    let mqtt_file_persistence = matches.is_present("MQTT File persistence");
 
     let hostnames: Vec<String> = matches
         .values_of("hostnames")
@@ -65,7 +87,9 @@ pub fn arguments() -> RuntimeArguments {
     RuntimeArguments {
         mqtt_server,
         mqtt_base_topic,
+        mqtt_qos,
         mqtt_retain,
+        mqtt_file_persistence,
         hostnames,
     }
 }

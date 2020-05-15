@@ -1,4 +1,6 @@
-use paho_mqtt::{Client, ConnectOptionsBuilder, MessageBuilder, MqttError};
+use paho_mqtt::{
+    Client, ConnectOptionsBuilder, CreateOptionsBuilder, MessageBuilder, MqttError, PersistenceType,
+};
 use std::collections::HashMap;
 use std::string::String;
 use std::time::Duration;
@@ -16,11 +18,17 @@ impl MqttCachedPublisher {
         }
     }
 
-    pub fn publish(&mut self, topic: &str, payload: &str, retain: bool) -> Result<(), MqttError> {
+    pub fn publish(
+        &mut self,
+        topic: &str,
+        payload: &str,
+        qos: i32,
+        retain: bool,
+    ) -> Result<(), MqttError> {
         let before = self.cache.insert(topic.to_owned(), payload.to_owned());
 
         if before != Some(payload.to_owned()) {
-            publish(&self.client, &topic, payload, retain)
+            publish(&self.client, &topic, payload, qos, retain)
         } else {
             Ok(())
         }
@@ -30,15 +38,26 @@ impl MqttCachedPublisher {
 pub fn connect(
     mqtt_server: &str,
     base_topic_name: &str,
+    qos: i32,
     retain: bool,
+    file_persistence: bool,
 ) -> Result<Client, MqttError> {
     let connect_topic = format!("{}/connected", base_topic_name);
 
-    let client = Client::new(mqtt_server)?;
+    let create_options = CreateOptionsBuilder::new()
+        .server_uri(mqtt_server)
+        .persistence(if file_persistence {
+            PersistenceType::File
+        } else {
+            PersistenceType::None
+        })
+        .finalize();
+
+    let client = Client::new(create_options)?;
 
     let last_will = MessageBuilder::new()
         .topic(&connect_topic)
-        .qos(0)
+        .qos(qos)
         .retained(retain)
         .payload("0")
         .finalize();
@@ -50,15 +69,21 @@ pub fn connect(
 
     client.connect(connection_options)?;
 
-    publish(&client, &connect_topic, "1", retain)?;
+    publish(&client, &connect_topic, "1", qos, retain)?;
 
     Ok(client)
 }
 
-fn publish(client: &Client, topic: &str, payload: &str, retain: bool) -> Result<(), MqttError> {
+fn publish(
+    client: &Client,
+    topic: &str,
+    payload: &str,
+    qos: i32,
+    retain: bool,
+) -> Result<(), MqttError> {
     let msg = MessageBuilder::new()
         .topic(topic)
-        .qos(0)
+        .qos(qos)
         .retained(retain)
         .payload(payload)
         .finalize();

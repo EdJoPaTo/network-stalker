@@ -14,8 +14,14 @@ fn main() {
     let args = cli::arguments();
 
     let mut mqtt_cached_publisher = mqtt::MqttCachedPublisher::new(
-        mqtt::connect(&args.mqtt_server, &args.mqtt_base_topic, args.mqtt_retain)
-            .expect("failed to connect to MQTT server"),
+        mqtt::connect(
+            &args.mqtt_server,
+            &args.mqtt_base_topic,
+            args.mqtt_qos,
+            args.mqtt_retain,
+            args.mqtt_file_persistence,
+        )
+        .expect("failed to connect to MQTT server"),
     );
 
     let mut last_seen_online: HashMap<String, i64> = HashMap::new();
@@ -26,6 +32,7 @@ fn main() {
             check_host(
                 &mut mqtt_cached_publisher,
                 &args.mqtt_base_topic,
+                args.mqtt_qos,
                 args.mqtt_retain,
                 &mut last_seen_online,
                 starttime,
@@ -38,6 +45,7 @@ fn main() {
             .publish(
                 &format!("{}/connected", &args.mqtt_base_topic),
                 "2",
+                args.mqtt_qos,
                 args.mqtt_retain,
             )
             .expect("failed to update connected status");
@@ -49,6 +57,7 @@ fn main() {
 fn check_host(
     mqtt_client: &mut mqtt::MqttCachedPublisher,
     mqtt_topic_base: &str,
+    mqtt_qos: i32,
     mqtt_retain: bool,
     last_seen_online: &mut HashMap<String, i64>,
     starttime: i64,
@@ -61,6 +70,7 @@ fn check_host(
         mqtt_client,
         &host_topic,
         "now",
+        mqtt_qos,
         mqtt_retain,
         Some(reachable),
     );
@@ -81,6 +91,7 @@ fn check_host(
         publish_seen_within(
             mqtt_client,
             &host_topic,
+            mqtt_qos,
             mqtt_retain,
             last_online,
             starttime,
@@ -93,6 +104,7 @@ fn check_host(
 fn publish_seen_within(
     mqtt_client: &mut mqtt::MqttCachedPublisher,
     topic_base: &str,
+    qos: i32,
     retain: bool,
     last_online: Option<&i64>,
     starttime: i64,
@@ -115,6 +127,7 @@ fn publish_seen_within(
         mqtt_client,
         topic_base,
         &topic_suffix,
+        qos,
         retain,
         online_within_timespan,
     )
@@ -124,6 +137,7 @@ fn publish_reachable(
     mqtt_client: &mut mqtt::MqttCachedPublisher,
     topic_base: &str,
     topic_suffix: &str,
+    qos: i32,
     retain: bool,
     reachable: Option<bool>,
 ) {
@@ -135,6 +149,6 @@ fn publish_reachable(
     };
 
     mqtt_client
-        .publish(&topic, payload, retain)
+        .publish(&topic, payload, qos, retain)
         .expect("publish host check to mqtt failed");
 }
