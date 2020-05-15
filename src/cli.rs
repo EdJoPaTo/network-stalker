@@ -13,7 +13,7 @@ pub fn build_cli() -> App<'static, 'static> {
     App::new("Network Stalker")
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
-        .about("tries to reach hosts on the network and reports their online status to MQTT")
+        .about("Tries to reach hosts on the network and reports their online status to MQTT")
         .arg(Arg::with_name("MQTT Server")
             .short("s")
             .long("mqtt-server")
