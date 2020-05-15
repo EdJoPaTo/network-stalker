@@ -5,7 +5,7 @@ After=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/network-stalker --retain --mqtt-server tcp://etoPiHome1:1883 etoNUC etoWindoof etoPhone
+ExecStart=/usr/local/bin/network-stalker --retain --file-persistence --mqtt-server tcp://etoPiHome1:1883 etoNUC etoWindoof etoPhone
 WorkingDirectory=/var/cache/network-stalker
 # Use root for nmap
 User=root
