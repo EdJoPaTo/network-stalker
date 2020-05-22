@@ -10,6 +10,8 @@ WorkingDirectory=/var/cache/network-stalker
 # Use root for nmap
 User=root
 Group=root
+Restart=on-failure
+RestartSec=5s
 
 [Install]
 RequiredBy=multi-user.target
