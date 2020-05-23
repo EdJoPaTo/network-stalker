@@ -107,6 +107,7 @@ jobs:
           Compress-Archive -CompressionLevel Optimal -Force -Path target/${{ matrix.config.triple }}/release/network-stalker.exe -DestinationPath network-stalker-${{ matrix.config.triple }}.zip
 
       - name: inspect target dir
+        if: runner.os == 'Linux' || runner.os == 'macOS'
         run: |
           ls -al target
           ls -al target/*
