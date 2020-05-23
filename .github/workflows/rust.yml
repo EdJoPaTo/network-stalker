@@ -88,16 +88,16 @@ jobs:
       - name: Build release
         run: cargo build --release --verbose --locked --all-targets --target ${{ matrix.config.triple }}
 
-      - name: Prepare release zip
-        run: rm -f *.zip
       - name: Pack release zip (linux, mac)
         if: runner.os == 'Linux' || runner.os == 'macOS'
         run: |
+          rm -f *.zip
           cd target/${{ matrix.config.triple }}/release
           zip -r ../../../network-stalker-${{ matrix.config.triple }}.zip network-stalker
       - name: Pack release zip (windows)
         if: runner.os == 'Windows'
         run: |
+          del *.zip
           Compress-Archive -CompressionLevel Optimal -Force -Path target/${{ matrix.config.triple }}/release/network-stalker.exe -DestinationPath network-stalker-${{ matrix.config.triple }}.zip
 
       - name: inspect target dir
