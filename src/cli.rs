@@ -6,6 +6,7 @@ pub struct RuntimeArguments {
     pub mqtt_qos: i32,
     pub mqtt_retain: bool,
     pub mqtt_file_persistence: bool,
+    pub verbose: bool,
     pub hostnames: Vec<String>,
 }
 
@@ -48,6 +49,11 @@ pub fn build_cli() -> App<'static, 'static> {
             .long("file-persistence")
             .help("When enabled the MQTT persistence is done via files within the working directory. Enabling this is more reliable.")
         )
+        .arg(Arg::with_name("verbose")
+            .short("v")
+            .long("verbose")
+            .help("Show network check results on stdout")
+        )
         .arg(Arg::with_name("hostnames")
             .multiple(true)
             .min_values(1)
@@ -78,6 +84,8 @@ pub fn arguments() -> RuntimeArguments {
 
     let mqtt_file_persistence = matches.is_present("MQTT File persistence");
 
+    let verbose = matches.is_present("verbose");
+
     let hostnames: Vec<String> = matches
         .values_of("hostnames")
         .expect("hostnames could not be read from command line")
@@ -90,6 +98,7 @@ pub fn arguments() -> RuntimeArguments {
         mqtt_qos,
         mqtt_retain,
         mqtt_file_persistence,
+        verbose,
         hostnames,
     }
 }

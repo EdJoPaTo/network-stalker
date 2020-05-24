@@ -75,7 +75,9 @@ fn check_host(
     let unix = now.timestamp();
     let iso = now.to_rfc3339_opts(SecondsFormat::Secs, true);
 
-    println!("{} reachable: {:>5} {}", &iso, reachable, hostname);
+    if runtime_arguments.verbose {
+        println!("{} reachable: {:>5} {}", &iso, reachable, hostname);
+    }
 
     if reachable {
         last_seen_online.insert(hostname.to_owned(), unix);
