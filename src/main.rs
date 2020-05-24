@@ -30,10 +30,8 @@ fn main() {
     loop {
         for hostname in args.hostnames.iter() {
             check_host(
+                &args,
                 &mut mqtt_cached_publisher,
-                &args.mqtt_base_topic,
-                args.mqtt_qos,
-                args.mqtt_retain,
                 &mut last_seen_online,
                 starttime,
                 &hostname,
@@ -55,23 +53,21 @@ fn main() {
 }
 
 fn check_host(
+    runtime_arguments: &cli::RuntimeArguments,
     mqtt_client: &mut mqtt::MqttCachedPublisher,
-    mqtt_topic_base: &str,
-    mqtt_qos: i32,
-    mqtt_retain: bool,
     last_seen_online: &mut HashMap<String, i64>,
     starttime: i64,
     hostname: &str,
 ) {
-    let host_topic = format!("{}/hosts/{}", mqtt_topic_base, hostname);
+    let host_topic = format!("{}/hosts/{}", runtime_arguments.mqtt_base_topic, hostname);
 
     let reachable = nmap::is_reachable(hostname);
     publish_reachable(
         mqtt_client,
         &host_topic,
         "now",
-        mqtt_qos,
-        mqtt_retain,
+        runtime_arguments.mqtt_qos,
+        runtime_arguments.mqtt_retain,
         Some(reachable),
     );
 
@@ -103,8 +99,8 @@ fn check_host(
             mqtt_client,
             &host_topic,
             &topic_suffix,
-            mqtt_qos,
-            mqtt_retain,
+            runtime_arguments.mqtt_qos,
+            runtime_arguments.mqtt_retain,
             online_within_timespan,
         )
     }
