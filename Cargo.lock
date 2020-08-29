@@ -235,7 +235,6 @@ dependencies = [
  "chrono",
  "clap",
  "paho-mqtt",
- "regex",
 ]
 
 [[package]]
