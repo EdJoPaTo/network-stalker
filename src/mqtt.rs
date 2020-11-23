@@ -1,5 +1,5 @@
 use paho_mqtt::{
-    Client, ConnectOptionsBuilder, CreateOptionsBuilder, MessageBuilder, MqttError, PersistenceType,
+    Client, ConnectOptionsBuilder, CreateOptionsBuilder, MessageBuilder, PersistenceType,
 };
 use std::collections::HashMap;
 use std::string::String;
@@ -24,7 +24,7 @@ impl MqttCachedPublisher {
         payload: &str,
         qos: i32,
         retain: bool,
-    ) -> Result<(), MqttError> {
+    ) -> Result<(), paho_mqtt::Error> {
         let before = self.cache.insert(topic.to_owned(), payload.to_owned());
 
         if before != Some(payload.to_owned()) {
@@ -41,7 +41,7 @@ pub fn connect(
     qos: i32,
     retain: bool,
     file_persistence: bool,
-) -> Result<Client, MqttError> {
+) -> Result<Client, paho_mqtt::Error> {
     let connect_topic = format!("{}/connected", base_topic_name);
 
     let create_options = CreateOptionsBuilder::new()
@@ -80,7 +80,7 @@ fn publish(
     payload: &str,
     qos: i32,
     retain: bool,
-) -> Result<(), MqttError> {
+) -> Result<(), paho_mqtt::Error> {
     let msg = MessageBuilder::new()
         .topic(topic)
         .qos(qos)

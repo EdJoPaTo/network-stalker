@@ -14,7 +14,7 @@ version = "2.33"
 features = ["wrap_help"]
 
 [dependencies.paho-mqtt]
-version = "0.7"
+version = "0.8"
 default-features = false
 # Add "ssl" to the features if you need ssl support
 features = ["bundled", "build_bindgen"]
