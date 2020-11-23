@@ -10,7 +10,7 @@ pub struct RuntimeArguments {
     pub hostnames: Vec<String>,
 }
 
-pub fn build_cli() -> App<'static, 'static> {
+pub fn build() -> App<'static, 'static> {
     App::new("Network Stalker")
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
@@ -63,7 +63,7 @@ pub fn build_cli() -> App<'static, 'static> {
 }
 
 pub fn arguments() -> RuntimeArguments {
-    let matches = build_cli().get_matches();
+    let matches = build().get_matches();
 
     let mqtt_server = matches
         .value_of("MQTT Server")
@@ -89,7 +89,7 @@ pub fn arguments() -> RuntimeArguments {
     let hostnames: Vec<String> = matches
         .values_of("hostnames")
         .expect("hostnames could not be read from command line")
-        .map(|str| str.to_owned())
+        .map(std::string::ToString::to_string)
         .collect();
 
     RuntimeArguments {

@@ -13,7 +13,7 @@ const LAST_ONLINE_MINUTES: [i64; 4] = [1, 3, 5, 15];
 fn main() {
     let args = cli::arguments();
 
-    let mut mqtt_cached_publisher = mqtt::MqttCachedPublisher::new(
+    let mut mqtt_cached_publisher = mqtt::CachedPublisher::new(
         mqtt::connect(
             &args.mqtt_server,
             &args.mqtt_base_topic,
@@ -28,7 +28,7 @@ fn main() {
 
     let starttime = Utc::now().timestamp();
     loop {
-        for hostname in args.hostnames.iter() {
+        for hostname in &args.hostnames {
             check_host(
                 &args,
                 &mut mqtt_cached_publisher,
@@ -54,7 +54,7 @@ fn main() {
 
 fn check_host(
     runtime_arguments: &cli::RuntimeArguments,
-    mqtt_client: &mut mqtt::MqttCachedPublisher,
+    mqtt_client: &mut mqtt::CachedPublisher,
     last_seen_online: &mut HashMap<String, i64>,
     starttime: i64,
     hostname: &str,
@@ -85,7 +85,7 @@ fn check_host(
 
     let last_online = last_seen_online.get(hostname);
 
-    for within_minutes in LAST_ONLINE_MINUTES.iter() {
+    for within_minutes in &LAST_ONLINE_MINUTES {
         let topic_suffix = format!("{}min", within_minutes);
         let min_timestamp = unix - (within_minutes * 60);
 
@@ -109,7 +109,7 @@ fn check_host(
 }
 
 fn publish_reachable(
-    mqtt_client: &mut mqtt::MqttCachedPublisher,
+    mqtt_client: &mut mqtt::CachedPublisher,
     topic_base: &str,
     topic_suffix: &str,
     qos: i32,

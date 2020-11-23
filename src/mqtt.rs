@@ -5,14 +5,14 @@ use std::collections::HashMap;
 use std::string::String;
 use std::time::Duration;
 
-pub struct MqttCachedPublisher {
+pub struct CachedPublisher {
     client: Client,
     cache: Box<HashMap<String, String>>,
 }
 
-impl MqttCachedPublisher {
-    pub fn new(client: Client) -> MqttCachedPublisher {
-        MqttCachedPublisher {
+impl CachedPublisher {
+    pub fn new(client: Client) -> CachedPublisher {
+        CachedPublisher {
             client,
             cache: Box::new(HashMap::new()),
         }
@@ -27,10 +27,10 @@ impl MqttCachedPublisher {
     ) -> Result<(), paho_mqtt::Error> {
         let before = self.cache.insert(topic.to_owned(), payload.to_owned());
 
-        if before != Some(payload.to_owned()) {
-            publish(&self.client, &topic, payload, qos, retain)
-        } else {
+        if before == Some(payload.to_owned()) {
             Ok(())
+        } else {
+            publish(&self.client, &topic, payload, qos, retain)
         }
     }
 }
