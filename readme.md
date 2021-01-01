@@ -32,7 +32,7 @@ This is helpful when doing something when someone arrives or someone is gone for
 ## Usage
 
 ```plaintext
-Network Stalker 0.3.0
+Network Stalker 0.4.0
 EdJoPaTo <rust-package@edjopato.de>
 Tries to reach hosts on the network and reports their online status to MQTT
 
