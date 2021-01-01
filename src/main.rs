@@ -42,6 +42,22 @@ fn main() {
     }
 }
 
+enum Reachable {
+    Online,
+    Offline,
+    Unknown,
+}
+
+impl From<bool> for Reachable {
+    fn from(input: bool) -> Self {
+        if input {
+            Reachable::Online
+        } else {
+            Reachable::Offline
+        }
+    }
+}
+
 fn check_host(
     runtime_arguments: &cli::RuntimeArguments,
     mqtt_client: &mut mqtt::CachedPublisher,
@@ -52,7 +68,7 @@ fn check_host(
     let host_topic = format!("{}/hosts/{}", runtime_arguments.mqtt_base_topic, hostname);
 
     let reachable = nmap::is_reachable(hostname);
-    publish_reachable(mqtt_client, &host_topic, "now", Some(reachable));
+    publish_reachable(mqtt_client, &host_topic, "now", &Reachable::from(reachable));
 
     let now = Utc::now();
     let unix = now.timestamp();
@@ -72,19 +88,22 @@ fn check_host(
         let topic_suffix = format!("{}min", within_minutes);
         let min_timestamp = unix - (within_minutes * 60);
 
-        let online_within_timespan = if last_online.is_some() {
-            last_online.map(|last| *last > min_timestamp)
+        let online_within_timespan = if let Some(last_online) = last_online {
+            // Was seen sometime -> within timespan?
+            Reachable::from(*last_online > min_timestamp)
         } else if starttime < min_timestamp {
-            Some(false)
+            // Wasnt seen and network-stalker is running longer long enough so it should have seen it otherwise
+            Reachable::Offline
         } else {
-            None
+            // Wasnt seen but network-stalker is not running as long as the required timespan
+            Reachable::Unknown
         };
 
         publish_reachable(
             mqtt_client,
             &host_topic,
             &topic_suffix,
-            online_within_timespan,
+            &online_within_timespan,
         )
     }
 }
@@ -93,13 +112,13 @@ fn publish_reachable(
     mqtt_client: &mut mqtt::CachedPublisher,
     topic_base: &str,
     topic_suffix: &str,
-    reachable: Option<bool>,
+    reachable: &Reachable,
 ) {
     let topic = format!("{}/{}", topic_base, topic_suffix);
     let payload = match reachable {
-        Some(true) => "online",
-        Some(false) => "offline",
-        None => "unknown",
+        Reachable::Online => "online",
+        Reachable::Offline => "offline",
+        Reachable::Unknown => "unknown",
     };
 
     mqtt_client.publish(&topic, payload);
