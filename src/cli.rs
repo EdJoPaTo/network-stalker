@@ -15,7 +15,7 @@ pub fn build() -> App<'static, 'static> {
     App::new("Network Stalker")
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
-        .about("Tries to reach hosts on the network and reports their online status to MQTT")
+        .about(env!("CARGO_PKG_DESCRIPTION"))
         .global_setting(AppSettings::ColoredHelp)
         .arg(Arg::with_name("MQTT Server")
             .short("h")

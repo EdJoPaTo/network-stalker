@@ -1,5 +1,6 @@
 [package]
 name = "network-stalker"
+description = "Tries to reach hosts on the network and reports their online status to MQTT"
 version = "0.3.0"
 authors = ["EdJoPaTo <rust-package@edjopato.de>"]
 edition = "2018"
