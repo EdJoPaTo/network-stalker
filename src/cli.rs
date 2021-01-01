@@ -1,11 +1,12 @@
 use clap::{App, Arg};
+use rumqttc::{qos, QoS};
 
 pub struct RuntimeArguments {
-    pub mqtt_server: String,
+    pub mqtt_host: String,
+    pub mqtt_port: u16,
     pub mqtt_base_topic: String,
-    pub mqtt_qos: i32,
+    pub mqtt_qos: QoS,
     pub mqtt_retain: bool,
-    pub mqtt_file_persistence: bool,
     pub verbose: bool,
     pub hostnames: Vec<String>,
 }
@@ -16,19 +17,27 @@ pub fn build() -> App<'static, 'static> {
         .author(env!("CARGO_PKG_AUTHORS"))
         .about("Tries to reach hosts on the network and reports their online status to MQTT")
         .arg(Arg::with_name("MQTT Server")
-            .short("s")
-            .long("mqtt-server")
-            .value_name("URI")
+            .short("h")
+            .long("host")
+            .value_name("HOST")
             .takes_value(true)
-            .help("Specify the MQTT Server")
-            .default_value("tcp://localhost:1883")
+            .help("Host on which the MQTT Broker is running")
+            .default_value("localhost")
+        )
+        .arg(Arg::with_name("MQTT Port")
+            .short("p")
+            .long("port")
+            .value_name("INT")
+            .takes_value(true)
+            .help("Port on which the MQTT Broker is running")
+            .default_value("1883")
         )
         .arg(Arg::with_name("MQTT Base Topic")
-            .short("b")
+            .short("t")
             .long("base-topic")
             .value_name("STRING")
             .takes_value(true)
-            .help("MQTT Root Topic to publish")
+            .help("MQTT Root Topic to publish to")
             .default_value("network-stalker")
         )
         .arg(Arg::with_name("MQTT QoS")
@@ -43,11 +52,6 @@ pub fn build() -> App<'static, 'static> {
             .short("r")
             .long("retain")
             .help("Publish MQTT Messages with the retain flag")
-        )
-        .arg(Arg::with_name("MQTT File persistence")
-            .short("p")
-            .long("file-persistence")
-            .help("When enabled the MQTT persistence is done via files within the working directory. Enabling this is more reliable.")
         )
         .arg(Arg::with_name("verbose")
             .short("v")
@@ -65,24 +69,28 @@ pub fn build() -> App<'static, 'static> {
 pub fn arguments() -> RuntimeArguments {
     let matches = build().get_matches();
 
-    let mqtt_server = matches
+    let mqtt_host = matches
         .value_of("MQTT Server")
-        .expect("MQTT Server could not be read from command line")
+        .expect("MQTT Host could not be read from command line")
         .to_owned();
+
+    let mqtt_port = matches
+        .value_of("MQTT Port")
+        .and_then(|s| s.parse::<u16>().ok())
+        .expect("MQTT Port could not be read from command line");
 
     let mqtt_base_topic = matches
         .value_of("MQTT Base Topic")
         .expect("MQTT Base Topic could not be read from command line")
         .to_owned();
 
-    let mqtt_qos: i32 = matches
+    let mqtt_qos = matches
         .value_of("MQTT QoS")
-        .and_then(|s| s.parse::<i32>().ok())
+        .and_then(|s| s.parse::<u8>().ok())
+        .and_then(|num| qos(num).ok())
         .expect("MQTT QoS could not be read from command line. Make sure its 0, 1 or 2");
 
     let mqtt_retain = matches.is_present("MQTT Retain");
-
-    let mqtt_file_persistence = matches.is_present("MQTT File persistence");
 
     let verbose = matches.is_present("verbose");
 
@@ -93,11 +101,11 @@ pub fn arguments() -> RuntimeArguments {
         .collect();
 
     RuntimeArguments {
-        mqtt_server,
+        mqtt_host,
+        mqtt_port,
         mqtt_base_topic,
         mqtt_qos,
         mqtt_retain,
-        mqtt_file_persistence,
         verbose,
         hostnames,
     }

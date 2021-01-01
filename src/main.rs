@@ -14,14 +14,11 @@ fn main() {
     let args = cli::arguments();
 
     let mut mqtt_cached_publisher = mqtt::CachedPublisher::new(
-        mqtt::connect(
-            &args.mqtt_server,
-            &args.mqtt_base_topic,
-            args.mqtt_qos,
-            args.mqtt_retain,
-            args.mqtt_file_persistence,
-        )
-        .expect("failed to connect to MQTT server"),
+        &args.mqtt_base_topic,
+        &args.mqtt_host,
+        args.mqtt_port,
+        args.mqtt_qos,
+        args.mqtt_retain,
     );
 
     let mut last_seen_online: HashMap<String, i64> = HashMap::new();
@@ -39,14 +36,7 @@ fn main() {
         }
 
         // Loop worked out fine -> everything is fine -> 2
-        mqtt_cached_publisher
-            .publish(
-                &format!("{}/connected", &args.mqtt_base_topic),
-                "2",
-                args.mqtt_qos,
-                args.mqtt_retain,
-            )
-            .expect("failed to update connected status");
+        mqtt_cached_publisher.publish(&format!("{}/connected", &args.mqtt_base_topic), "2");
 
         thread::sleep(time::Duration::from_secs(30));
     }
@@ -62,14 +52,7 @@ fn check_host(
     let host_topic = format!("{}/hosts/{}", runtime_arguments.mqtt_base_topic, hostname);
 
     let reachable = nmap::is_reachable(hostname);
-    publish_reachable(
-        mqtt_client,
-        &host_topic,
-        "now",
-        runtime_arguments.mqtt_qos,
-        runtime_arguments.mqtt_retain,
-        Some(reachable),
-    );
+    publish_reachable(mqtt_client, &host_topic, "now", Some(reachable));
 
     let now = Utc::now();
     let unix = now.timestamp();
@@ -101,8 +84,6 @@ fn check_host(
             mqtt_client,
             &host_topic,
             &topic_suffix,
-            runtime_arguments.mqtt_qos,
-            runtime_arguments.mqtt_retain,
             online_within_timespan,
         )
     }
@@ -112,8 +93,6 @@ fn publish_reachable(
     mqtt_client: &mut mqtt::CachedPublisher,
     topic_base: &str,
     topic_suffix: &str,
-    qos: i32,
-    retain: bool,
     reachable: Option<bool>,
 ) {
     let topic = format!("{}/{}", topic_base, topic_suffix);
@@ -123,7 +102,5 @@ fn publish_reachable(
         None => "unknown",
     };
 
-    mqtt_client
-        .publish(&topic, payload, qos, retain)
-        .expect("publish host check to mqtt failed");
+    mqtt_client.publish(&topic, payload);
 }

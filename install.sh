@@ -2,8 +2,6 @@
 
 nice cargo build --release
 
-sudo mkdir -p /var/cache/network-stalker
-
 # systemd stuff
 sudo cp -uv *.service /etc/systemd/system
 sudo systemctl daemon-reload

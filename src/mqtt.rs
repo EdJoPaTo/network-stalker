@@ -1,92 +1,71 @@
-use paho_mqtt::{
-    Client, ConnectOptionsBuilder, CreateOptionsBuilder, MessageBuilder, PersistenceType,
-};
+use rumqttc::{Connection, LastWill, MqttOptions, QoS};
 use std::collections::HashMap;
 use std::string::String;
+use std::thread::{self, sleep};
 use std::time::Duration;
 
 pub struct CachedPublisher {
-    client: Client,
-    cache: Box<HashMap<String, String>>,
+    client: rumqttc::Client,
+    publish_history: HashMap<String, String>,
+    qos: QoS,
+    retain: bool,
 }
 
 impl CachedPublisher {
-    pub fn new(client: Client) -> CachedPublisher {
-        CachedPublisher {
+    pub fn new(base_topic: &str, host: &str, port: u16, qos: QoS, retain: bool) -> Self {
+        let last_will_topic = format!("{}/connected", base_topic);
+
+        let mut mqttoptions = MqttOptions::new(base_topic, host, port);
+        mqttoptions.set_last_will(LastWill {
+            topic: last_will_topic.to_owned(),
+            message: "0".into(),
+            qos,
+            retain,
+        });
+
+        let (mut client, connection) = rumqttc::Client::new(mqttoptions, 10);
+
+        client
+            .publish(last_will_topic, qos, retain, "1")
+            .expect("failed to publish connected");
+
+        thread::Builder::new()
+            .name("mqtt connection".into())
+            .spawn(move || thread_logic(connection))
+            .expect("failed to spawn mqtt thread");
+
+        Self {
+            retain,
+            qos,
             client,
-            cache: Box::new(HashMap::new()),
+            publish_history: HashMap::new(),
         }
     }
 
-    pub fn publish(
-        &mut self,
-        topic: &str,
-        payload: &str,
-        qos: i32,
-        retain: bool,
-    ) -> Result<(), paho_mqtt::Error> {
-        let before = self.cache.insert(topic.to_owned(), payload.to_owned());
+    pub fn publish(&mut self, topic: &str, payload: &str) {
+        let last_value = self
+            .publish_history
+            .insert(topic.to_owned(), payload.to_owned());
 
-        if before == Some(payload.to_owned()) {
-            Ok(())
-        } else {
-            publish(&self.client, &topic, payload, qos, retain)
+        if last_value != Some(payload.to_owned()) {
+            self.client
+                .publish(topic, self.qos, self.retain, payload)
+                .expect("failed to publish to mqtt");
         }
     }
 }
 
-pub fn connect(
-    mqtt_server: &str,
-    base_topic_name: &str,
-    qos: i32,
-    retain: bool,
-    file_persistence: bool,
-) -> Result<Client, paho_mqtt::Error> {
-    let connect_topic = format!("{}/connected", base_topic_name);
-
-    let create_options = CreateOptionsBuilder::new()
-        .server_uri(mqtt_server)
-        .persistence(if file_persistence {
-            PersistenceType::File
-        } else {
-            PersistenceType::None
-        })
-        .finalize();
-
-    let client = Client::new(create_options)?;
-
-    let last_will = MessageBuilder::new()
-        .topic(&connect_topic)
-        .qos(qos)
-        .retained(retain)
-        .payload("0")
-        .finalize();
-
-    let connection_options = ConnectOptionsBuilder::new()
-        .automatic_reconnect(Duration::from_secs(1), Duration::from_secs(30))
-        .will_message(last_will)
-        .finalize();
-
-    client.connect(connection_options)?;
-
-    publish(&client, &connect_topic, "1", qos, retain)?;
-
-    Ok(client)
-}
-
-fn publish(
-    client: &Client,
-    topic: &str,
-    payload: &str,
-    qos: i32,
-    retain: bool,
-) -> Result<(), paho_mqtt::Error> {
-    let msg = MessageBuilder::new()
-        .topic(topic)
-        .qos(qos)
-        .retained(retain)
-        .payload(payload)
-        .finalize();
-
-    client.publish(msg)
+fn thread_logic(mut connection: Connection) {
+    for notification in connection.iter() {
+        match notification {
+            Ok(rumqttc::Event::Outgoing(rumqttc::Outgoing::Disconnect)) => {
+                break;
+            }
+            Ok(_) => {}
+            Err(err) => {
+                println!("MQTT Connection Error: {}", err);
+                sleep(Duration::from_secs(1));
+            }
+        };
+    }
 }

@@ -32,7 +32,7 @@ This is helpful when doing something when someone arrives or someone is gone for
 ## Usage
 
 ```plaintext
-Network Stalker 0.1.0
+Network Stalker 0.3.0
 EdJoPaTo <rust-package@edjopato.de>
 Tries to reach hosts on the network and reports their online status to MQTT
 
@@ -40,19 +40,17 @@ USAGE:
     network-stalker [FLAGS] [OPTIONS] <hostnames>...
 
 FLAGS:
-    -p, --file-persistence    When enabled the MQTT persistence is done via files within
-                              the working directory. Enabling this is more reliable.
-    -r, --retain              Publish MQTT Messages with the retain flag
-    -h, --help                Prints help information
-    -V, --version             Prints version information
+    -r, --retain     Publish MQTT Messages with the retain flag
+        --help       Prints help information
+    -V, --version    Prints version information
+    -v, --verbose    Show network check results on stdout
 
 OPTIONS:
-    -b, --base-topic <STRING>    MQTT Root Topic to publish [default: network-stalker]
-    -q, --qos <INT>              Define the Quality of Service for the MQTT Messages (0,
-                                 1 or 2) [default: 2]
-    -s, --mqtt-server <URI>      Specify the MQTT Server [default: tcp://localhost:1883]
+    -t, --base-topic <STRING>    MQTT Root Topic to publish to [default: network-stalker]
+    -p, --port <INT>             Port on which the MQTT Broker is running [default: 1883]
+    -q, --qos <INT>              Define the Quality of Service for the MQTT Messages (0, 1 or 2) [default: 2]
+    -h, --host <HOST>            Host on which the MQTT Broker is running [default: localhost]
 
 ARGS:
-    <hostnames>...    Hostnames to be checked for being reachable like
-                      '192.168.178.1' or 'fritz.box'
+    <hostnames>...    Hostnames to be checked for being reachable like '192.168.178.1' or 'fritz.box'
 ```
