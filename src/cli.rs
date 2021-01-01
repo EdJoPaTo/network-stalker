@@ -1,4 +1,4 @@
-use clap::{App, Arg};
+use clap::{App, AppSettings, Arg};
 use rumqttc::{qos, QoS};
 
 pub struct RuntimeArguments {
@@ -16,6 +16,7 @@ pub fn build() -> App<'static, 'static> {
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
         .about("Tries to reach hosts on the network and reports their online status to MQTT")
+        .global_setting(AppSettings::ColoredHelp)
         .arg(Arg::with_name("MQTT Server")
             .short("h")
             .long("host")
