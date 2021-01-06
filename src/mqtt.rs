@@ -16,12 +16,7 @@ impl CachedPublisher {
         let last_will_topic = format!("{}/connected", base_topic);
 
         let mut mqttoptions = MqttOptions::new(base_topic, host, port);
-        mqttoptions.set_last_will(LastWill {
-            topic: last_will_topic.to_owned(),
-            message: "0".into(),
-            qos,
-            retain,
-        });
+        mqttoptions.set_last_will(LastWill::new(&last_will_topic, "0", qos, retain));
 
         let (mut client, connection) = rumqttc::Client::new(mqttoptions, 10);
 
