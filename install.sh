@@ -12,4 +12,4 @@ sudo systemctl daemon-reload
 sudo systemctl stop network-stalker.service
 sudo cp -uv target/release/network-stalker /usr/local/bin/
 
-sudo systemctl start network-stalker.service
+sudo systemctl enable --now network-stalker.service
