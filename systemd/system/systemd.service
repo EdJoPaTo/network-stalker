@@ -2,6 +2,7 @@
 Description=Run network-stalker
 Wants=network-online.target
 After=network-online.target
+StartLimitIntervalSec=0
 
 [Service]
 Type=simple
@@ -10,7 +11,7 @@ ExecStart=/usr/local/bin/network-stalker --retain --host etoPiHome1 etoNUC etoWi
 User=root
 Group=root
 Restart=on-failure
-RestartSec=5s
+RestartSec=20
 
 [Install]
 WantedBy=multi-user.target
