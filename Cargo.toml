@@ -3,8 +3,10 @@ name = "network-stalker"
 description = "Tries to reach hosts on the network and reports their online status to MQTT"
 version = "0.4.3"
 license = "MIT"
-authors = ["EdJoPaTo <rust-package@edjopato.de>"]
+repository = "https://github.com/EdJoPaTo/network-stalker"
+authors = ["EdJoPaTo <network-stalker-rust@edjopato.de>"]
 edition = "2018"
+rust-version = "1.52.1"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
