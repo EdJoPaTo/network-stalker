@@ -1,16 +1,6 @@
 use clap::{App, AppSettings, Arg};
-use rumqttc::{qos, QoS};
 
-pub struct RuntimeArguments {
-    pub mqtt_host: String,
-    pub mqtt_port: u16,
-    pub mqtt_base_topic: String,
-    pub mqtt_qos: QoS,
-    pub mqtt_retain: bool,
-    pub verbose: bool,
-    pub hostnames: Vec<String>,
-}
-
+#[must_use]
 pub fn build() -> App<'static, 'static> {
     App::new("Network Stalker")
         .version(env!("CARGO_PKG_VERSION"))
@@ -65,49 +55,4 @@ pub fn build() -> App<'static, 'static> {
             .required(true)
             .help("Hostnames to be checked for being reachable like '192.168.178.1' or 'fritz.box'")
         )
-}
-
-pub fn arguments() -> RuntimeArguments {
-    let matches = build().get_matches();
-
-    let mqtt_host = matches
-        .value_of("MQTT Server")
-        .expect("MQTT Host could not be read from command line")
-        .to_owned();
-
-    let mqtt_port = matches
-        .value_of("MQTT Port")
-        .and_then(|s| s.parse::<u16>().ok())
-        .expect("MQTT Port could not be read from command line");
-
-    let mqtt_base_topic = matches
-        .value_of("MQTT Base Topic")
-        .expect("MQTT Base Topic could not be read from command line")
-        .to_owned();
-
-    let mqtt_qos = matches
-        .value_of("MQTT QoS")
-        .and_then(|s| s.parse::<u8>().ok())
-        .and_then(|num| qos(num).ok())
-        .expect("MQTT QoS could not be read from command line. Make sure its 0, 1 or 2");
-
-    let mqtt_retain = matches.is_present("MQTT Retain");
-
-    let verbose = matches.is_present("verbose");
-
-    let hostnames: Vec<String> = matches
-        .values_of("hostnames")
-        .expect("hostnames could not be read from command line")
-        .map(std::string::ToString::to_string)
-        .collect();
-
-    RuntimeArguments {
-        mqtt_host,
-        mqtt_port,
-        mqtt_base_topic,
-        mqtt_qos,
-        mqtt_retain,
-        verbose,
-        hostnames,
-    }
 }

@@ -1,5 +1,6 @@
 use chrono::SecondsFormat;
 use chrono::Utc;
+use rumqttc::qos;
 use std::collections::HashMap;
 use std::thread;
 use std::time;
@@ -11,32 +12,56 @@ mod nmap;
 const LAST_ONLINE_MINUTES: [i64; 4] = [1, 3, 5, 15];
 
 fn main() {
-    let args = cli::arguments();
+    let matches = cli::build().get_matches();
 
-    let mut mqtt_cached_publisher = mqtt::CachedPublisher::new(
-        &args.mqtt_base_topic,
-        &args.mqtt_host,
-        args.mqtt_port,
-        args.mqtt_qos,
-        args.mqtt_retain,
-    );
+    let mqtt_host = matches
+        .value_of("MQTT Server")
+        .expect("MQTT Host could not be read from command line");
+
+    let mqtt_port = matches
+        .value_of("MQTT Port")
+        .and_then(|s| s.parse::<u16>().ok())
+        .expect("MQTT Port could not be read from command line");
+
+    let mqtt_base_topic = matches
+        .value_of("MQTT Base Topic")
+        .expect("MQTT Base Topic could not be read from command line");
+
+    let mqtt_qos = matches
+        .value_of("MQTT QoS")
+        .and_then(|s| s.parse::<u8>().ok())
+        .and_then(|num| qos(num).ok())
+        .expect("MQTT QoS could not be read from command line. Make sure its 0, 1 or 2");
+
+    let mqtt_retain = matches.is_present("MQTT Retain");
+
+    let verbose = matches.is_present("verbose");
+
+    let hostnames = matches
+        .values_of("hostnames")
+        .expect("hostnames could not be read from command line")
+        .collect::<Vec<_>>();
+
+    let mut mqtt_cached_publisher =
+        mqtt::CachedPublisher::new(mqtt_base_topic, mqtt_host, mqtt_port, mqtt_qos, mqtt_retain);
 
     let mut last_seen_online: HashMap<String, i64> = HashMap::new();
 
     let starttime = Utc::now().timestamp();
     loop {
-        for hostname in &args.hostnames {
+        for hostname in &hostnames {
             check_host(
-                &args,
+                mqtt_base_topic,
+                verbose,
                 &mut mqtt_cached_publisher,
                 &mut last_seen_online,
                 starttime,
-                &hostname,
+                hostname,
             );
         }
 
         // Loop worked out fine -> everything is fine -> 2
-        mqtt_cached_publisher.publish(&format!("{}/connected", &args.mqtt_base_topic), "2");
+        mqtt_cached_publisher.publish(&format!("{}/connected", &mqtt_base_topic), "2");
 
         thread::sleep(time::Duration::from_secs(30));
     }
@@ -59,13 +84,14 @@ impl From<bool> for Reachable {
 }
 
 fn check_host(
-    runtime_arguments: &cli::RuntimeArguments,
+    mqtt_base_topic: &str,
+    verbose: bool,
     mqtt_client: &mut mqtt::CachedPublisher,
     last_seen_online: &mut HashMap<String, i64>,
     starttime: i64,
     hostname: &str,
 ) {
-    let host_topic = format!("{}/hosts/{}", runtime_arguments.mqtt_base_topic, hostname);
+    let host_topic = format!("{}/hosts/{}", mqtt_base_topic, hostname);
 
     let reachable = nmap::is_reachable(hostname);
     publish_reachable(mqtt_client, &host_topic, "now", &Reachable::from(reachable));
@@ -74,7 +100,7 @@ fn check_host(
     let unix = now.timestamp();
     let iso = now.to_rfc3339_opts(SecondsFormat::Secs, true);
 
-    if runtime_arguments.verbose {
+    if verbose {
         println!("{} reachable: {:>5} {}", &iso, reachable, hostname);
     }
 
@@ -104,7 +130,7 @@ fn check_host(
             &host_topic,
             &topic_suffix,
             &online_within_timespan,
-        )
+        );
     }
 }
 
