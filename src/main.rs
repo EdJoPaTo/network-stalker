@@ -76,9 +76,9 @@ enum Reachable {
 impl From<bool> for Reachable {
     fn from(input: bool) -> Self {
         if input {
-            Reachable::Online
+            Self::Online
         } else {
-            Reachable::Offline
+            Self::Offline
         }
     }
 }
