@@ -32,25 +32,67 @@ This is helpful when doing something when someone arrives or someone is gone for
 ## Usage
 
 ```plaintext
-Network Stalker 0.4.0
-EdJoPaTo <rust-package@edjopato.de>
+Network Stalker 0.5.0
+EdJoPaTo <network-stalker-rust@edjopato.de>
 Tries to reach hosts on the network and reports their online status to MQTT
 
 USAGE:
-    network-stalker [FLAGS] [OPTIONS] <hostnames>...
-
-FLAGS:
-    -r, --retain     Publish MQTT Messages with the retain flag
-        --help       Prints help information
-    -V, --version    Prints version information
-    -v, --verbose    Show network check results on stdout
-
-OPTIONS:
-    -t, --base-topic <STRING>    MQTT Root Topic to publish to [default: network-stalker]
-    -p, --port <INT>             Port on which the MQTT Broker is running [default: 1883]
-    -q, --qos <INT>              Define the Quality of Service for the MQTT Messages (0, 1 or 2) [default: 2]
-    -h, --host <HOST>            Host on which the MQTT Broker is running [default: localhost]
+    network-stalker [OPTIONS] <HOST>...
 
 ARGS:
-    <hostnames>...    Hostnames to be checked for being reachable like '192.168.178.1' or 'fritz.box'
+    <HOST>...
+            Hostnames to be checked for being reachable like '192.168.178.1' or
+            'fritz.box'
+
+OPTIONS:
+    -b, --broker <HOST>
+            Host on which the MQTT Broker is running
+
+            [env: MQTT_BROKER=]
+            [default: localhost]
+
+    -h, --help
+            Print help information
+
+    -p, --port <INT>
+            Port on which the MQTT Broker is running
+
+            [env: MQTT_PORT=]
+            [default: 1883]
+
+        --password <STRING>
+            Password to access the MQTT broker. Passing the password via command line is
+            insecure as the password can be read from the history!
+
+            [env: MQTT_PASSWORD]
+
+    -q, --qos <INT>
+            Define the Quality of Service for the MQTT Messages
+
+            [env: MQTT_QOS=]
+            [default: 2]
+            [possible values: 0, 1, 2]
+
+    -r, --retain
+            Publish MQTT Messages with the retain flag
+
+            [env: MQTT_RETAIN=]
+
+    -t, --base-topic <STRING>
+            MQTT Root Topic to publish to
+
+            [env: MQTT_BASE_TOPIC=]
+            [default: network-stalker]
+
+    -u, --username <STRING>
+            Username to access the MQTT broker. Anonymous access when not supplied.
+
+            [env: MQTT_USERNAME=]
+            [aliases: user]
+
+    -v, --verbose
+            Show network check results on stdout
+
+    -V, --version
+            Print version information
 ```
