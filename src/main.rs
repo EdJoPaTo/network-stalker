@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 use chrono::SecondsFormat;
 use chrono::Utc;
 use rumqttc::qos;
