@@ -12,11 +12,24 @@ pub struct CachedPublisher {
 }
 
 impl CachedPublisher {
-    pub fn new(base_topic: &str, host: &str, port: u16, qos: QoS, retain: bool) -> Self {
+    pub fn new(
+        base_topic: &str,
+        host: &str,
+        port: u16,
+        username: Option<&str>,
+        password: Option<&str>,
+        qos: QoS,
+        retain: bool,
+    ) -> Self {
         let last_will_topic = format!("{}/connected", base_topic);
 
         let mut mqttoptions = MqttOptions::new(base_topic, host, port);
         mqttoptions.set_last_will(LastWill::new(&last_will_topic, "0", qos, retain));
+
+        if let Some(password) = password {
+            let username = username.unwrap();
+            mqttoptions.set_credentials(username, password);
+        }
 
         let (mut client, connection) = rumqttc::Client::new(mqttoptions, 10);
 

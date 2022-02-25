@@ -26,6 +26,35 @@ pub fn build() -> Command<'static> {
             .help("Port on which the MQTT Broker is running")
             .default_value("1883")
         )
+        .arg(
+            Arg::new("MQTT Username")
+                .short('u')
+                .long("username")
+                .visible_alias("user")
+                .env("MQTT_USERNAME")
+                .value_hint(ValueHint::Username)
+                .value_name("STRING")
+                .takes_value(true)
+                .requires("MQTT Password")
+                .help("Username to access the MQTT broker")
+                .long_help(
+                    "Username to access the MQTT broker. Anonymous access when not supplied.",
+                ),
+        )
+        .arg(
+            Arg::new("MQTT Password")
+                .long("password")
+                .env("MQTT_PASSWORD")
+                .value_hint(ValueHint::Other)
+                .value_name("STRING")
+                .hide_env_values(true)
+                .takes_value(true)
+                .requires("MQTT Username")
+                .help("Password to access the MQTT broker")
+                .long_help(
+                    "Password to access the MQTT broker. Passing the password via command line is insecure as the password can be read from the history!",
+                ),
+        )
         .arg(Arg::new("MQTT Base Topic")
             .short('t')
             .long("base-topic")
