@@ -99,6 +99,7 @@ fn check_host(
         let topic_suffix = format!("{}min", within_minutes);
         let min_timestamp = unix - (within_minutes * 60);
 
+        #[allow(clippy::option_if_let_else)]
         let online_within_timespan = if let Some(last_online) = last_online {
             // Was seen sometime -> within timespan?
             Reachable::from(*last_online > min_timestamp)
