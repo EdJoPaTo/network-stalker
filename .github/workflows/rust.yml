@@ -127,7 +127,8 @@ jobs:
         run: >
           tar -cv
           LICENSE README.md
-          completions/
+          systemd/**/*.service
+          -C target/ completions/ -C ../
           -C target/${{ matrix.triple }}/release/ network-stalker
           | gzip --best > ${{ env.ARTIFACT_NAME }}.tar.gz
       - name: Package (Windows)
@@ -135,7 +136,7 @@ jobs:
         run: >
           7z a ${{ env.ARTIFACT_NAME }}.zip
           LICENSE README.md
-          ./completions/
+          ./target/completions/
           ./target/${{ matrix.triple }}/release/network-stalker.exe
 
       - name: Upload artifact

@@ -14,33 +14,16 @@ const LAST_ONLINE_MINUTES: [i64; 4] = [1, 3, 5, 15];
 fn main() {
     let matches = cli::build().get_matches();
 
-    let mqtt_host = matches
-        .value_of("MQTT Server")
-        .expect("MQTT Host could not be read from command line");
-
+    let mqtt_host = matches.value_of("MQTT Server").unwrap();
     let mqtt_port = matches
         .value_of("MQTT Port")
         .and_then(|s| s.parse::<u16>().ok())
-        .expect("MQTT Port could not be read from command line");
-
-    let mqtt_base_topic = matches
-        .value_of("MQTT Base Topic")
-        .expect("MQTT Base Topic could not be read from command line");
-
-    let mqtt_qos = matches
-        .value_of("MQTT QoS")
-        .and_then(|s| s.parse::<u8>().ok())
-        .and_then(|num| qos(num).ok())
-        .expect("MQTT QoS could not be read from command line. Make sure its 0, 1 or 2");
-
+        .unwrap();
+    let mqtt_base_topic = matches.value_of("MQTT Base Topic").unwrap();
+    let mqtt_qos = qos(matches.value_of("MQTT QoS").unwrap().parse().unwrap()).unwrap();
     let mqtt_retain = matches.is_present("MQTT Retain");
-
     let verbose = matches.is_present("verbose");
-
-    let hostnames = matches
-        .values_of("hostnames")
-        .expect("hostnames could not be read from command line")
-        .collect::<Vec<_>>();
+    let hostnames = matches.values_of("hostnames").unwrap().collect::<Vec<_>>();
 
     let mut mqtt_cached_publisher =
         mqtt::CachedPublisher::new(mqtt_base_topic, mqtt_host, mqtt_port, mqtt_qos, mqtt_retain);
