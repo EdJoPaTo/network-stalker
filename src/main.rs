@@ -16,7 +16,7 @@ const LAST_ONLINE_MINUTES: [i64; 4] = [1, 3, 5, 15];
 fn main() {
     let matches = cli::build().get_matches();
 
-    let mqtt_host = matches.value_of("MQTT Server").unwrap();
+    let mqtt_host = matches.value_of("MQTT Broker").unwrap();
     let mqtt_port = matches
         .value_of("MQTT Port")
         .and_then(|s| s.parse::<u16>().ok())

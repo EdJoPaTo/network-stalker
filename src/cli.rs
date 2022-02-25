@@ -5,9 +5,9 @@ use clap::{command, Arg, Command, ValueHint};
 pub fn build() -> Command<'static> {
     command!()
         .name("Network Stalker")
-        .arg(Arg::new("MQTT Server")
-            .short('h')
-            .long("host")
+        .arg(Arg::new("MQTT Broker")
+            .short('b')
+            .long("broker")
             .env("MQTT_BROKER")
             .value_hint(ValueHint::Hostname)
             .value_name("HOST")
