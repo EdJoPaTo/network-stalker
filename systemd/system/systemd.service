@@ -6,7 +6,9 @@ StartLimitIntervalSec=0
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/network-stalker --retain --host etoPiHome1 etoNUC etoWindoof etoPhone
+Environment="MQTT_BROKER=etoPiHome1"
+Environment="MQTT_RETAIN=true"
+ExecStart=/usr/local/bin/network-stalker etoNUC etoWindoof etoPhone
 # Use root for nmap
 User=root
 Group=root
