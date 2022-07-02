@@ -13,7 +13,7 @@ nice cargo build --release --locked
 
 # systemd
 sudo mkdir -p /usr/local/lib/systemd/system/
-sudo cp -uv "systemd/system/systemd.service" "/usr/local/lib/systemd/system/$name.service"
+sudo cp -v "systemd/system/service" "/usr/local/lib/systemd/system/$name.service"
 sudo systemctl daemon-reload
 
 # stop, replace and start new version
