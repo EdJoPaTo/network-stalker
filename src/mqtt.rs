@@ -16,8 +16,8 @@ impl CachedPublisher {
         base_topic: &str,
         host: &str,
         port: u16,
-        username: Option<&str>,
-        password: Option<&str>,
+        username: Option<&String>,
+        password: Option<&String>,
         qos: QoS,
         retain: bool,
     ) -> Self {

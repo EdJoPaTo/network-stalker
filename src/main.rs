@@ -16,18 +16,26 @@ const LAST_ONLINE_MINUTES: [i64; 4] = [1, 3, 5, 15];
 fn main() {
     let matches = cli::build().get_matches();
 
-    let mqtt_base_topic = matches.value_of("MQTT Base Topic").unwrap();
-    let verbose = matches.is_present("verbose");
-    let hostnames = matches.values_of("hostnames").unwrap().collect::<Vec<_>>();
+    let mqtt_base_topic = matches.get_one::<String>("MQTT Base Topic").unwrap();
+    let verbose = matches.contains_id("verbose");
+    let hostnames = matches
+        .get_many::<String>("hostnames")
+        .unwrap()
+        .collect::<Vec<_>>();
 
     let mut mqtt_cached_publisher = mqtt::CachedPublisher::new(
         mqtt_base_topic,
-        matches.value_of("MQTT Broker").unwrap(),
-        matches.value_of("MQTT Port").unwrap().parse().unwrap(),
-        matches.value_of("MQTT Username"),
-        matches.value_of("MQTT Password"),
-        qos(matches.value_of("MQTT QoS").unwrap().parse().unwrap()).unwrap(),
-        matches.is_present("MQTT Retain"),
+        matches.get_one::<String>("MQTT Broker").unwrap(),
+        *matches.get_one::<u16>("MQTT Port").unwrap(),
+        matches.get_one::<String>("MQTT Username"),
+        matches.get_one::<String>("MQTT Password"),
+        qos(matches
+            .get_one::<String>("MQTT QoS")
+            .unwrap()
+            .parse()
+            .unwrap())
+        .unwrap(),
+        matches.contains_id("MQTT Retain"),
     );
 
     let mut last_seen_online: HashMap<String, i64> = HashMap::new();
