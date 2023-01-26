@@ -84,17 +84,17 @@ fn check_host(
     starttime: i64,
     hostname: &str,
 ) {
-    let host_topic = format!("{}/hosts/{}", mqtt_base_topic, hostname);
+    let host_topic = format!("{mqtt_base_topic}/hosts/{hostname}");
 
     let reachable = nmap::is_reachable(hostname);
     publish_reachable(mqtt_client, &host_topic, "now", &Reachable::from(reachable));
 
     let now = Utc::now();
     let unix = now.timestamp();
-    let iso = now.to_rfc3339_opts(SecondsFormat::Secs, true);
 
     if verbose {
-        println!("{} reachable: {:>5} {}", &iso, reachable, hostname);
+        let iso = now.to_rfc3339_opts(SecondsFormat::Secs, true);
+        println!("{iso} reachable: {reachable:>5} {hostname}");
     }
 
     if reachable {
@@ -104,7 +104,7 @@ fn check_host(
     let last_online = last_seen_online.get(hostname);
 
     for within_minutes in &LAST_ONLINE_MINUTES {
-        let topic_suffix = format!("{}min", within_minutes);
+        let topic_suffix = format!("{within_minutes}min");
         let min_timestamp = unix - (within_minutes * 60);
 
         #[allow(clippy::option_if_let_else)]
@@ -134,7 +134,7 @@ fn publish_reachable(
     topic_suffix: &str,
     reachable: &Reachable,
 ) {
-    let topic = format!("{}/{}", topic_base, topic_suffix);
+    let topic = format!("{topic_base}/{topic_suffix}");
     let payload = match reachable {
         Reachable::Online => "online",
         Reachable::Offline => "offline",

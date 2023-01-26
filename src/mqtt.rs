@@ -21,7 +21,7 @@ impl CachedPublisher {
         qos: QoS,
         retain: bool,
     ) -> Self {
-        let last_will_topic = format!("{}/connected", base_topic);
+        let last_will_topic = format!("{base_topic}/connected");
 
         let mut mqttoptions = MqttOptions::new(base_topic, host, port);
         mqttoptions.set_last_will(LastWill::new(&last_will_topic, "0", qos, retain));
@@ -71,7 +71,7 @@ fn thread_logic(mut connection: Connection) {
             }
             Ok(_) => {}
             Err(err) => {
-                println!("MQTT Connection Error: {}", err);
+                println!("MQTT Connection Error: {err}");
                 sleep(Duration::from_secs(1));
             }
         };
