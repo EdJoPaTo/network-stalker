@@ -8,8 +8,8 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=on-failure
 RestartSec=20
-Environment="MQTT_BROKER=etoPiHome1"
-Environment="MQTT_RETAIN=true"
+#Environment=MQTT_BROKER=
+Environment=MQTT_RETAIN=true
 ExecStart=/usr/local/bin/network-stalker etoNUC etoWindoof etoPhone
 # Use root for nmap
 User=root
