@@ -2,6 +2,7 @@
 
 use chrono::SecondsFormat;
 use chrono::Utc;
+use clap::Parser;
 use rumqttc::qos;
 use std::collections::HashMap;
 use std::thread;
@@ -14,38 +15,26 @@ mod nmap;
 const LAST_ONLINE_MINUTES: [i64; 4] = [1, 3, 5, 15];
 
 fn main() {
-    let matches = cli::build().get_matches();
-
-    let mqtt_base_topic = matches.get_one::<String>("MQTT Base Topic").unwrap();
-    let verbose = matches.contains_id("verbose");
-    let hostnames = matches
-        .get_many::<String>("hostnames")
-        .unwrap()
-        .collect::<Vec<_>>();
+    let matches = cli::Cli::parse();
 
     let mut mqtt_cached_publisher = mqtt::CachedPublisher::new(
-        mqtt_base_topic,
-        matches.get_one::<String>("MQTT Broker").unwrap(),
-        *matches.get_one::<u16>("MQTT Port").unwrap(),
-        matches.get_one::<String>("MQTT Username"),
-        matches.get_one::<String>("MQTT Password"),
-        qos(matches
-            .get_one::<String>("MQTT QoS")
-            .unwrap()
-            .parse()
-            .unwrap())
-        .unwrap(),
-        matches.contains_id("MQTT Retain"),
+        matches.base_topic.clone(),
+        matches.broker,
+        matches.port,
+        matches.username,
+        matches.password,
+        qos(matches.qos).expect("Should be valid QoS"),
+        matches.retain,
     );
 
     let mut last_seen_online: HashMap<String, i64> = HashMap::new();
 
     let starttime = Utc::now().timestamp();
     loop {
-        for hostname in &hostnames {
+        for hostname in &matches.hostnames {
             check_host(
-                mqtt_base_topic,
-                verbose,
+                &matches.base_topic,
+                matches.verbose,
                 &mut mqtt_cached_publisher,
                 &mut last_seen_online,
                 starttime,
@@ -54,7 +43,7 @@ fn main() {
         }
 
         // Loop worked out fine -> everything is fine -> 2
-        mqtt_cached_publisher.publish(&format!("{}/connected", &mqtt_base_topic), "2");
+        mqtt_cached_publisher.publish(&format!("{}/connected", matches.base_topic), "2");
 
         thread::sleep(time::Duration::from_secs(30));
     }

@@ -13,11 +13,11 @@ pub struct CachedPublisher {
 
 impl CachedPublisher {
     pub fn new(
-        base_topic: &str,
-        host: &str,
+        base_topic: String,
+        host: String,
         port: u16,
-        username: Option<&String>,
-        password: Option<&String>,
+        username: Option<String>,
+        password: Option<String>,
         qos: QoS,
         retain: bool,
     ) -> Self {

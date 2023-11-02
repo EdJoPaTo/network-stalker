@@ -1,103 +1,97 @@
-use clap::{command, value_parser, Arg, Command, ValueHint};
+use clap::{Parser, ValueHint};
 
-#[allow(clippy::too_many_lines)]
-#[must_use]
-pub fn build() -> Command<'static> {
-    command!()
-        .name("Network Stalker")
-        .arg(Arg::new("MQTT Broker")
-            .short('b')
-            .long("broker")
-            .env("MQTT_BROKER")
-            .value_hint(ValueHint::Hostname)
-            .value_name("HOST")
-            .takes_value(true)
-            .help("Host on which the MQTT Broker is running")
-            .default_value("localhost")
-        )
-        .arg(Arg::new("MQTT Port")
-            .short('p')
-            .long("port")
-            .env("MQTT_PORT")
-            .value_hint(ValueHint::Other)
-            .value_name("INT")
-            .takes_value(true)
-            .value_parser(value_parser!(u16))
-            .help("Port on which the MQTT Broker is running")
-            .default_value("1883")
-        )
-        .arg(
-            Arg::new("MQTT Username")
-                .short('u')
-                .long("username")
-                .visible_alias("user")
-                .env("MQTT_USERNAME")
-                .value_hint(ValueHint::Username)
-                .value_name("STRING")
-                .takes_value(true)
-                .requires("MQTT Password")
-                .help("Username to access the MQTT broker")
-                .long_help(
-                    "Username to access the MQTT broker. Anonymous access when not supplied.",
-                ),
-        )
-        .arg(
-            Arg::new("MQTT Password")
-                .long("password")
-                .env("MQTT_PASSWORD")
-                .value_hint(ValueHint::Other)
-                .value_name("STRING")
-                .hide_env_values(true)
-                .takes_value(true)
-                .requires("MQTT Username")
-                .help("Password to access the MQTT broker")
-                .long_help(
-                    "Password to access the MQTT broker. Passing the password via command line is insecure as the password can be read from the history!",
-                ),
-        )
-        .arg(Arg::new("MQTT Base Topic")
-            .short('t')
-            .long("base-topic")
-            .env("MQTT_BASE_TOPIC")
-            .value_hint(ValueHint::Other)
-            .value_name("STRING")
-            .takes_value(true)
-            .help("MQTT Root Topic to publish to")
-            .default_value("network-stalker")
-        )
-        .arg(Arg::new("MQTT QoS")
-            .short('q')
-            .long("qos")
-            .env("MQTT_QOS")
-            .value_hint(ValueHint::Other)
-            .value_name("INT")
-            .value_parser(["0", "1", "2"])
-            .takes_value(true)
-            .help("Define the Quality of Service for the MQTT Messages")
-            .default_value("2")
-        )
-        .arg(Arg::new("MQTT Retain")
-            .short('r')
-            .long("retain")
-            .env("MQTT_RETAIN")
-            .help("Publish MQTT Messages with the retain flag")
-        )
-        .arg(Arg::new("verbose")
-            .short('v')
-            .long("verbose")
-            .help("Show network check results on stdout")
-        )
-        .arg(Arg::new("hostnames")
-            .value_hint(ValueHint::Hostname)
-            .value_name("HOST")
-            .multiple_values(true)
-            .min_values(1)
-            .required(true)
-            .help("Hostnames to be checked for being reachable like '192.168.178.1' or 'fritz.box'")
-        )
+#[derive(Debug, Parser)]
+#[command(about, version)]
+pub struct Cli {
+    /// Host on which the MQTT Broker is running
+    #[arg(
+        long,
+        short,
+        env = "MQTT_BROKER",
+        value_hint = ValueHint::Hostname,
+        value_name = "HOST",
+        default_value = "localhost",
+    )]
+    pub broker: String,
+
+    /// Port on which the MQTT Broker is running
+    #[arg(
+        long,
+        short,
+        env = "MQTT_PORT",
+        value_hint = ValueHint::Other,
+        value_name = "INT",
+        default_value_t = 1883,
+    )]
+    pub port: u16,
+
+    /// Username to access the MQTT broker.
+    ///
+    /// Anonymous access when not supplied.
+    #[arg(
+        long,
+        short,
+        env = "MQTT_USERNAME",
+        value_hint = ValueHint::Username,
+        value_name = "STRING",
+        requires = "password",
+    )]
+    pub username: Option<String>,
+
+    /// Password to access the MQTT broker.
+    ///
+    /// Passing the password via command line is insecure as the password can be read from the history!
+    #[arg(
+        long,
+        env = "MQTT_PASSWORD",
+        value_hint = ValueHint::Other,
+        value_name = "STRING",
+        hide_env_values = true,
+        requires = "username",
+    )]
+    pub password: Option<String>,
+
+    /// MQTT Root Topic to publish to
+    #[arg(
+        short = 't',
+        long,
+        env = "MQTT_BASE_TOPIC",
+        value_hint = ValueHint::Other,
+        value_name = "STRING",
+        default_value = "network-stalker",
+    )]
+    pub base_topic: String,
+
+    /// Define the Quality of Service for the MQTT Messages
+    #[arg(
+        short,
+        long,
+        env = "MQTT_QOS",
+        value_hint = ValueHint::Other,
+        value_name = "INT",
+        value_parser = ["0", "1", "2"],
+        default_value_t = 2,
+    )]
+    pub qos: u8,
+
+    /// Publish MQTT Messages with the retain flag
+    #[arg(short, long, env = "MQTT_RETAIN")]
+    pub retain: bool,
+
+    /// Show network check results on stdout
+    #[arg(short, long)]
+    pub verbose: bool,
+
+    /// Hostnames to be checked for being reachable like '192.168.178.1' or 'fritz.box'
+    #[arg(
+        value_hint = ValueHint::Hostname,
+        value_name = "HOST",
+    )]
+    pub hostnames: Vec<String>,
 }
 
 #[test]
 fn verify() {
-    build().debug_assert();
+    use clap::CommandFactory;
+    Cli::command().debug_assert();
 }
