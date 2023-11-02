@@ -20,4 +20,4 @@ clap_complete = "3"
 [dependencies]
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 clap = { version = "3", features = ["cargo", "env", "wrap_help"] }
-rumqttc = "0.20"
+rumqttc = "0.23"
