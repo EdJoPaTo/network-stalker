@@ -9,8 +9,8 @@ Type=simple
 Restart=on-failure
 RestartSec=20
 #Environment=MQTT_BROKER=
-Environment=MQTT_RETAIN=true
-ExecStart=/usr/local/bin/network-stalker etoNUC etoWindoof etoPhone
+#Environment=MQTT_RETAIN=true
+ExecStart=/usr/bin/network-stalker # hostnames
 # Use root for nmap
 User=root
 Group=root
